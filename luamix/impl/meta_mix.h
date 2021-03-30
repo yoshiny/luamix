@@ -262,8 +262,12 @@ namespace LuaMix::Impl {
 			mt.RawSet("__gc", &gc<C>);
 		}
 
-		// 这里貌似有点问题，如super后Super，则cur会漏掉，后面看是否需要修复
-		static void BuidSuper(LuaRef cur, LuaRef super) {
+		/* 如果BuildSuper后，其super又BuildSuper了，则会导致super的super不是自己的super；
+		 * 反映到代码运行中，会出现脚本中已有一个孙子类对象指针，然后再将此指针以祖父类指针压入时，
+		 * 对象的原表会被重新绑定为祖父类对应的原表，导致其成员方法缺失！
+		 * 然而，这种情况暂时并无彻底避免的方法，唯一可以做的就是导出类时，依照继承顺序，从父类开始依次导出子孙类，这本身就是很自然的事情；
+		*/
+		static void BuildSuper(LuaRef cur, LuaRef super) {
 			auto cur_super = cur.RawGet(MetaKeySuper);
 			cur_super.RawSet(super.RawGet("__name"), true);
 
@@ -308,7 +312,7 @@ namespace LuaMix::Impl {
 		{
 			MixMetaEvent::Init(state_);
 
-			// 这里将字符串内化到lua中，并通过注册表挂住，以免外部传入一个栈变量，导致异常
+			// 这里将字符串内化到lua中，并通过注册表挂住，以免引用了一个栈变量
 			class_name = lua_pushstring(state_, class_name);
 			luaL_ref(state_, LUA_REGISTRYINDEX);
 			const_name = lua_pushstring(state_, const_name);
@@ -324,7 +328,7 @@ namespace LuaMix::Impl {
 				const_mt_ = LuaRef::MakeMetatable(state_, const_name);
 				ClassMetaEvent::BuildMetatable<C>(class_mt_);
 				ClassMetaEvent::BuildMetatable<C>(const_mt_);
-				ClassMetaEvent::BuidSuper(class_mt_, const_mt_);
+				ClassMetaEvent::BuildSuper(class_mt_, const_mt_);
 				ClassMetaEvent::BuildInhertance(const_mt_, class_mt_);
 			}
 		}
@@ -341,8 +345,8 @@ namespace LuaMix::Impl {
 			}
 
 			auto parent_const_mt = LuaRef::RefMetatable(state_, ClassConstSignature<P>::Value());
-			ClassMetaEvent::BuidSuper(const_mt_, parent_const_mt);
-			ClassMetaEvent::BuidSuper(class_mt_, parent_class_mt);
+			ClassMetaEvent::BuildSuper(const_mt_, parent_const_mt);
+			ClassMetaEvent::BuildSuper(class_mt_, parent_class_mt);
 			ClassMetaEvent::BuildInhertance(class_mt_, parent_class_mt);
 
 			return *this;
