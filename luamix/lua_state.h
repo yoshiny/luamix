@@ -57,6 +57,7 @@ namespace LuaMix {
 			}
 		}
 
+		// 系统集成时，总是应该在此处捕获错误信息，并记录日志，避免让上层逻辑代码处理
 		template <typename... Rs, typename... Ts>
 		decltype(auto) Call( const char *func_path, Ts&&... args ) {
 			ScriptCall<Rs...> sc(state_, func_path);

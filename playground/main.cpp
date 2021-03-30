@@ -124,9 +124,14 @@ int main() {
 
 	LUAMIX_VECTOR_SUPPORT(state, Button*);
 
-	std::vector<Window *> vw;
+	std::vector<Window *> vws;
+	Button vb;
+	Window vw;
 	LUAMIX_GLOBAL_EXPORT(state)
-		.ScriptVal("g_Windows", &vw)
+		.ScriptVal("g_Windows", &vws)
+		.ScriptVal("g_Button", &vb)
+		.ScriptVal("g_ButtonAsWindow", dynamic_cast<Window *>(&vb))
+		.ScriptVal("g_ConstWnd", const_cast<const Window *>(&vw))
 		;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -136,7 +141,7 @@ int main() {
 	}
 
 	// 脚本函数调用测试
-	std::cout << "Calling Script Function:\n";
+	std::cout << "Calling Script Function:-------------------------\n";
 	if (auto rst = state.Call<Window *>("Window")) {
 		std::cout << "Create Window From Script:" << rst.value() << std::endl;
 	}

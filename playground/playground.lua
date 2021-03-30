@@ -97,4 +97,34 @@ svs = nil
 collectgarbage()
 print()
 
-print("Àà¼Ì³Ð²âÊÔ--------------------")
+print("Àà¶àÌ¬/¼Ì³Ð²âÊÔ--------------------")
+print("g_ButtonAsWindow:SetTitle('button_title'); print(g_ButtonAsWindow.Title) => [Button]button_title")
+g_ButtonAsWindow:SetTitle('button_title'); print(g_ButtonAsWindow.Title)
+print()
+
+print("ÀàÐÍ´íÎó²âÊÔ--------------------")
+print("g_ConstWnd:SetTitle('tt') => bad argument #1 to '?' (Window expected, got const Window)" )
+print(pcall( g_ConstWnd.SetTitle, g_ConstWnd, 'tt' ))
+local chk = load("g_ConstWnd.Title = 'tt'")
+print(pcall( chk ))
+print()
+
+print("peer±í²âÊÔ--------------------")
+local sw2 = Window()
+print("sw2.some_val = 123; print(sw2.some_val) => 123")
+sw2.some_val = 123; print(sw2.some_val)
+print()
+
+print("sw2.some_val = 'ssss'; print(sw2.some_val) => ssss")
+sw2.some_val = 'ssss'; print(sw2.some_val)
+print()
+
+local window_hook = {
+	ScriptSetTitle = function( self, title )
+		self.Title = title
+	end
+}
+LuaMix.SetPeer(sw2, window_hook)
+print("sw2:ScriptSetTitle('script title'); print(sw2.Title) => script title")
+sw2:ScriptSetTitle('script title'); print(sw2.Title)
+print()
