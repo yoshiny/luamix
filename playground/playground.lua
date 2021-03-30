@@ -1,92 +1,100 @@
-print( rawget( Window, "__call" ) )
+test = {
+	double_mem = 99.99,
 
-print( Window )
+	SingleReturn = function( val )
+		return val
+	end,
 
-print( getmetatable( Window ) )
+	MultiReturn = function( self, val )
+		return self.double_mem, self.double_mem, val
+	end,
+}
 
-local sw = Window();
+print("»´æ÷◊¢≤·≤‚ ‘--------------------")
+print("add_ref(1, 1) => 3	2")
+print( add_ref(1, 1) )
+print()
 
+print("print1(123) => 123")
+print1(123)
+print()
 
+print("print2(123, 456) => 123 456")
+print2(123, 456)
+print()
 
-print(sw)
-sw.Text = "created in script"
-print(sw:GetText() )
+print("print(fetch_window(pWnd)) => true, &g_wnd")
+local tmp_wnd = Window()
+print(tmp_wnd)
+local suc, tmp_wnd = fetch_window(tmp_wnd)
+print(suc, tmp_wnd)
+print()
 
-sw = nil
+print("print(IntValue); IntValue = 321456; print(IntValue) => 999	21456" )
+print(IntValue); IntValue = 321456; print(IntValue)
+print()
 
+print("print(ReadOnlyIntValue) => 321456")
+print(ReadOnlyIntValue)
+print()
+
+print("ReadOnlyIntValue = 0 => property `ReadOnlyIntValue` is read-only")
+local err_call = function() ReadOnlyIntValue = 0 end
+print(pcall(err_call))
+print()
+
+print("print(kEnum0, kEnum1) => 0	1")
+print(kEnum0, kEnum1)
+print()
+
+print("¿‡◊¢≤·≤‚ ‘--------------------")
+print("local sw = Window(); print(sw) => &sw")
+local sw = Window(); print(sw)
+print()
+
+print("sw:SetSize(123456); print(sw:GetSize();) => 321456.0")
+sw:SetSize(123456); print(sw:GetSize())
+print()
+
+print("sw.Size = 654321; print(sw.Size) => 654321.0")
+sw.Size = 654321; print(sw.Size)
+print()
+
+print("sw:SetTitle('script wnd'); print(sw:GetTitle()) => script wnd")
+sw:SetTitle('script wnd'); print(sw:GetTitle())
+print()
+
+print("sw:SetTitle2('script wnd2'); print(sw:GetTitle()) => script wnd2")
+sw:SetTitle2('script wnd2'); print(sw:GetTitle())
+print()
+
+print("sw.Title = 'title3'; print(sw.Title) => title3")
+sw.Title = 'title3'; print(sw.Title)
+print()
+
+print("sw:ClearWndTitle(); print(sw.Title) => empty")
+sw:ClearWndTitle(); print(sw.Title)
+print()
+
+print("Ω≈±æ±‰¡ø◊‘∂Øgc")
+local pure_script_wnd = Window.TraceCreate()
+pure_script_wnd = nil
 collectgarbage()
+print()
 
-print( "after collectgarbage()" )
-
-
-print(sw)
-
-print( Window.add( 1, 2) )
-
-print("--------------")
-
-
-
-
-print( test.pWnd )
-
-test.pWnd.Text = "a btn"
-
-print( test.pWnd:GetText() )
-
-print( test.pBtn.Text )
-
-print("--------------")
-
-print( test.vi:size() )
--- test.vi:reserve(10)
-print( test.vi:capacity() )
-
--- test.vi:resize_with(10, 999)
-
--- test.vi:insert(9, 1000)
-
-test.vi:set(0, 88888)
-
-
-
-print( test.vi:size() )
-print( test.vi:capacity() )
-
---for k, v in test.vi:ipairs() do
-	--print( string.format("%s = %s", k, v) )
---end
-
-print("--------------")
-
-test.vw:resize(10)
-
-for i = 0, 9 do
-	test.vw:set(i, Window.new())
+print("std::vector<Window*>≤‚ ‘")
+local svs = _G["std::vector<Window*>"].new()
+svs:resize(3)
+for i = 0, 2 do
+	svs:set(i, Window.TraceCreate())
+	svs:get(i).Title = string.format("title_%s", i)
 end
-
-for k, v in test.vw:ipairs() do
-	v.Text = string.format( "title<%s>", k )
+for k, v in svs:ipairs() do
+	print( string.format( "svs[%d].Title=%s", k, v.Title ) )
 end
+svs:clear()
+svs = nil
+collectgarbage()
+print()
 
-for k, v in test.vw:ipairs() do
-	print( string.format( "window_%s:%s", k, v.Text ) )
-end
-
-print("--------------")
-
-local svi = _G["std::vector<int>"].new()
-
-svi:resize_with(10, 999)
-
-for k, v in svi:ipairs() do
-	print( string.format("%s = %s", k, v) )
-end
-
-print("--------------")
-
-for k, v in pairs( LuaMix ) do
-	print( k, v )
-end
-
-print("--------------")
+print("¿‡ºÃ≥–≤‚ ‘--------------------")

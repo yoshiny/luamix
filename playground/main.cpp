@@ -8,100 +8,151 @@
 #include "luamix/lua_state.h"
 #include "luamix/vector_mix.h"
 
-
-struct Window {
-	std::string text_;
-
-	virtual std::string GetText() const noexcept {
-		return text_;
+class Window {
+public:
+	float GetSize() const noexcept {
+		return size_;
 	}
 
-	int size_{ 0 };
+	void SetSize(float size) {
+		size_ = size;
+	}
+
+	std::string GetTitle() const {
+		return title_;
+	}
+
+	virtual void SetTitle(const std::string &title) {
+		title_ = title;
+	}
+
+	virtual void SetTitle(const char *title) {
+		title_ = title;
+	}
+
+	static Window *CreateWnd() {
+		return new Window;
+	}
+
+	static void ClearWndTitle(Window *wnd) {
+		wnd->title_.clear();
+	}
+
+public:
+	float size_;
+	std::string title_;
 };
 
-struct Button : Window {
-	std::string GetText() const noexcept {
-		return "[button]" + text_;
+class Button : public Window {
+public:
+	virtual void SetTitle(const char *title) override {
+		title_ = "[Button]";
+		title_ += title;
+	}
+
+	virtual void SetTitle(const std::string &title) override {
+		title_ = "[Button]" + title;
 	}
 };
 
+int g_IntValue = 999;
 
-int a = 111;
-
-int b = 0;
-int c = 999;
-
-int add(int p1, int& p2) {
-	p2++;
-	return p1 + p2;
+int add_ref(int a, int&b) {
+	b++;
+	return a + b;
 }
+
+template <typename... Ts>
+void print_any( Ts... args ) {
+	( (std::cout << args << std::ends), ... );
+	if constexpr (sizeof...(args) > 0) {
+		std::cout << std::endl;
+	}
+}
+
+Window g_wnd;
+
+bool fetch_window(const Window *& wnd ) {
+	wnd = &g_wnd;
+	return true;
+}
+
+enum MyEnum {
+	kEnum0 = 0,
+	kEnum1,
+	kEnum2,
+};
 
 int main() {
 	LuaMix::LuaState state;
+	//////////////////////////////////////////////////////////////////////////
+	// 全局函数注册
+	LUAMIX_GLOBAL_EXPORT(state)
+		.Function("add_ref", add_ref)
+		.Function("print1", print_any<int>)
+		.Function("print2", print_any<int, int>)
+		.Function("fetch_window", fetch_window)
+		.Property("IntValue", []() { return g_IntValue; }, [](int v) { g_IntValue = v; })
+		.Property("ReadOnlyIntValue", []() { return g_IntValue; }, nullptr)
+		.ScriptVal("kEnum0", kEnum0)
+		.ScriptVal("kEnum1", kEnum1)
+		;
 
 	//////////////////////////////////////////////////////////////////////////
-
-
-
-
+	// 类注册
 	LUAMIX_CLASS_EXPORT(state, Window)
-.DefaultFactory()
-		.Method("GetText", &Window::GetText)
-			.Function("add", add)
-			.Property("Text", &Window::text_);
+		.Method("GetSize", &Window::GetSize)
+		.Method("SetSize", &Window::SetSize)
+		.Method("GetTitle", &Window::GetTitle)
+		.Method("SetTitle", static_cast<void(Window::*)(const std::string&)>(&Window::SetTitle))
+		.Method("SetTitle2", static_cast<void(Window::*)(const char*)>(&Window::SetTitle))
+		.DefaultFactory()
+		.Factory("CreateWnd", &Window::CreateWnd, nullptr)
+		.Factory("TraceCreate", [] { Window * w = new Window; std::cout << w << " created from script.\n"; return w; }, [](Window *p) {std::cout << p << " auto gced.\n"; delete p; })
+		.Function("ClearWndTitle", &Window::ClearWndTitle)
+		.Property("Size", &Window::size_)
+		.Property("Title", &Window::title_)
+		;
 
-		LUAMIX_CLASS_EXPORT_WITH_BASE(state, Button, Window)
-			.Factory("new", [] { return new Button; }, [](Button* sw) {
-			std::cout << sw->GetText() << " gced.\n";
-			delete sw; })
-			.Method("GetText", &Window::GetText);
+	LUAMIX_VECTOR_SUPPORT(state, Window*);
 
-			LUAMIX_VECTOR_SUPPORT(state, int);
-			LUAMIX_VECTOR_SUPPORT(state, Window*);
-			//Window w;
+	LUAMIX_CLASS_EXPORT_WITH_BASE(state, Button, Window)
+		.Method("SetTitle", static_cast<void(Button::*)(const std::string&)>(&Button::SetTitle))
+		.Method("SetTitle2", static_cast<void(Button::*)(const char*)>(&Button::SetTitle))
+		.Method("SetTitle3", static_cast<void(Window::*)(const char*)>(&Window::SetTitle))
+		;
 
-			std::string str("asd");
-			const std::string& str2 = str;
+	LUAMIX_VECTOR_SUPPORT(state, Button*);
 
+	std::vector<Window *> vw;
+	LUAMIX_GLOBAL_EXPORT(state)
+		.ScriptVal("g_Windows", &vw)
+		;
 
-			Button btn;
+	//////////////////////////////////////////////////////////////////////////
+	if (luaL_dofile(state, "playground.lua")) {
+		std::cout << lua_tostring(state, -1) << std::endl;
+		lua_pop(state, 1);
+	}
 
-			std::vector<int> vi{ 1, 2, 3 };
+	// 脚本函数调用测试
+	std::cout << "Calling Script Function:\n";
+	if (auto rst = state.Call<Window *>("Window")) {
+		std::cout << "Create Window From Script:" << rst.value() << std::endl;
+	}
 
-			std::vector<Window*> vw;
+	if (auto rst = state.Call<std::string>("test.SingleReturn", "string to retrieve")) {
+		std::cout << "Retrieve String From Script Call<test.SingleReturn>:" << rst.value() << std::endl;
+	}
 
-			LUAMIX_MODULE_EXPORT(state, "test")
-				.ScriptVal("vi", (&vi))
-				.ScriptVal("vw", (&vw))
-				.ScriptVal("pWnd", dynamic_cast<Window *>(&btn))
-				.ScriptVal("pBtn", &btn)
-				.ScriptVal("a", a)
+	if (auto rst = state.SelfCall<double, int, float>("test", "MultiReturn", 88)) {
+		auto[a, i, b] = rst.value();
+		std::cout << "Retrieve Multi Value From Script SelfCall<test::MultiReturn>:" << a << std::ends << i << std::ends << b << std::endl;
 
-				.ScriptVal("str2", str2)
+		double c = 999.0; int j = 0; float d = 999.999f;
+		std::tie(c, j, d) = rst.value();
+		std::cout << "Retrieve Multi Value From Script SelfCall<test::MultiReturn>:" << c << std::ends << j << std::ends << d << std::endl;
+	}
 
-				//.ScriptVal("w", const_cast<const Window *>(&w))
-				.Property("c", []() {return c; }, nullptr)
-				.Function("add", &add)
-				.Property("b", []() {return b; }, [](int p) {b = p; });
-
-			//////////////////////////////////////////////////////////////////////////
-			if (luaL_dofile(state, "playground.lua")) {
-				std::cout << lua_tostring(state, -1) << std::endl;
-				lua_pop(state, 1);
-			}
-
-			//int a = 88, b = 99;
-			//
-			//if (auto rst = state.SelfCall<int, int>("solar", "Dump", 1)) {
-			//	std::tie(a, b) = rst.value();
-			//}
-
-			//std::cout << a << std::endl;
-			//std::cout << b << std::endl;
-
-			if (auto rst = state.Call<Window *>("Window.new")) {
-				std::cout << rst.value() << std::endl;
-			}
-
-			return 0;
+	return 0;
 }

@@ -370,6 +370,8 @@ namespace LuaMix::Impl {
 			return *this;
 		}
 
+		// 注册外部函数形式的属性，待添加
+
 		// 注册函数；主要用于静态成员函数，亦可用于类外部扩充成员函数
 		template <typename F>
 		ClassMeta<C>& Function(const char *name, const F& fn) {
