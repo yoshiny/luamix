@@ -78,6 +78,9 @@ namespace LuaMix::Impl {
 	template<typename R, typename... P>
 	struct CppFuncProxy<R(*)(P...)> : CppFuncProxyImpl<R(*)(P...), R, P...> {};
 
+	template<typename R, typename... P>
+	struct CppFuncProxy<R(*)(P...) noexcept> : CppFuncProxyImpl<R(*)(P...), R, P...> {};
+
 	// 常规函数对象，退化为指针处理
 	template<typename F>
 	struct CppFuncProxy<F, std::enable_if_t<std::is_function_v<F>>> : CppFuncProxy<std::decay_t<F>> {};
