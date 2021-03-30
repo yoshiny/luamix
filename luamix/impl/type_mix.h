@@ -26,35 +26,6 @@ namespace LuaMix::Impl {
 	template <typename T>
 	inline constexpr bool _is_type_speced_v = _is_type_speced<T>::value;
 
-	//template <typename T, bool IS_SPECED, bool IS_CLASS>
-	//struct _type_mix_impl;
-
-	//template <typename T>
-	//struct _type_mix_impl<T, true, false> {
-	//	using Type = _type_mix_spec<T>;
-	//};
-
-	//template <typename T>
-	//struct _type_mix_impl<T, true, true> {
-	//	using Type = _type_mix_spec<T>;
-	//};
-
-	//template <typename T>
-	//struct _type_mix_impl<T, false, false> {
-	//	using Type = _type_mix_spec<std::decay_t<T>>;
-	//};
-
-	//template <typename T>
-	//struct _type_mix_impl<T, false, true> {
-	//	using Type = _type_mix_class<std::decay_t<T>>;
-	//};
-
-	//template <typename T>
-	//inline constexpr bool _is_class_v = std::is_class_v<std::remove_cv_t<std::remove_pointer_t<std::decay_t<T>>>>;
-
-	//template <typename T>
-	//struct TypeMix : _type_mix_impl<T, _is_type_speced_v<T>, _is_class_v<T>>::Type {};
-
 	template <typename T>
 	inline constexpr bool _is_class_v = std::is_class_v<std::remove_cv_t<std::remove_pointer_t<T>>>;
 
