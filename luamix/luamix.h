@@ -40,7 +40,11 @@ namespace LuaMix {
 		if constexpr (!std::is_same_v<B, void>) {
 			cm.Inhertance<B>();
 		}
-		export_to.RawSet(class_name, cm.RefClassMetatable());
+
+		auto tb = LuaRef::MakeTable(L);
+		tb.SetMetatable(cm.RefClassMetatable());
+
+		export_to.RawSet(class_name, tb);
 		return cm;
 	}
 }

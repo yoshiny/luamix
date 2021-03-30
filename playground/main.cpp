@@ -45,9 +45,7 @@ int main() {
 
 
 	LUAMIX_CLASS_EXPORT(state, Window)
-		.Factory("new", [] { return new Window; }, [](Window* sw) {
-		std::cout << sw->GetText() << " gced.\n";
-		delete sw; })
+.DefaultFactory()
 		.Method("GetText", &Window::GetText)
 			.Function("add", add)
 			.Property("Text", &Window::text_);

@@ -299,11 +299,6 @@ namespace LuaMix::Impl {
 	// 类元信息
 	template <typename C>
 	class ClassMeta {
-	private:
-		lua_State* state_;
-		LuaRef class_mt_;
-		LuaRef const_mt_;
-
 	public:
 		ClassMeta() = delete;
 
@@ -414,6 +409,17 @@ namespace LuaMix::Impl {
 			return *this;
 		}
 
+		// 注册默认工厂及回收函数
+		ClassMeta<C>& DefaultFactory() {
+			using GCProxy = CppFuncProxy<decltype(&defaultGC)>;
+			class_mt_.RawSet(MetaKeyGC, LuaRef::MakeFunction(state_, GCProxy::Proxy, GCProxy::Function(&defaultGC)));
+
+			using FactoryProxy = CppFactoryProxy<decltype(&defaultFactory)>;
+			class_mt_.RawSet("__call", LuaRef::MakeFunction(state_, FactoryProxy::Factory, FactoryProxy::Function(&defaultFactory)));
+
+			return *this;
+		}
+
 		// 注册脚本变量
 		template <typename T>
 		ClassMeta<C>& ScriptVal(const char* name, T val) {
@@ -424,5 +430,19 @@ namespace LuaMix::Impl {
 		LuaRef RefClassMetatable() const {
 			return class_mt_;
 		}
+
+	private:
+		static C * defaultFactory() {
+			return new C;
+		}
+
+		static void defaultGC(C * p) {
+			delete p;
+		}
+
+	private:
+		lua_State* state_;
+		LuaRef class_mt_;
+		LuaRef const_mt_;
 	};
 }

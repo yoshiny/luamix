@@ -1,6 +1,12 @@
-print( test.str )
+print( rawget( Window, "__call" ) )
 
-local sw = Window.new();
+print( Window )
+
+print( getmetatable( Window ) )
+
+local sw = Window();
+
+
 
 print(sw)
 sw.Text = "created in script"

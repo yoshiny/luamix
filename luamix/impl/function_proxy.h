@@ -114,9 +114,9 @@ namespace LuaMix::Impl {
 	struct CppFuncProxy<F, std::enable_if_t<CppCouldBeLambda<F>::value>> : CppFuncProxy<typename CppLambdaTraits<F>::FunctionType> {};
 
 	template <typename F>
-	struct CppFactoryProxy : CppFuncProxy<F, std::enable_if_t<CppCouldBeLambda<F>::value>> {
+	struct CppFactoryProxy : CppFuncProxy<F> {
 		static int Factory(lua_State* L) {
-			int ret = CppFuncProxy<F, std::enable_if_t<CppCouldBeLambda<F>::value>>::Proxy(L);
+			int ret = CppFuncProxy<F>::Proxy(L);
 			assert(ret >= 1);
 			StackGuard _guard(L);
 			luaL_checktype(L, -ret, LUA_TUSERDATA);
