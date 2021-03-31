@@ -159,5 +159,10 @@ int main() {
 		std::cout << "Retrieve Multi Value From Script SelfCall<test::MultiReturn>:" << c << std::ends << j << std::ends << d << std::endl;
 	}
 
+	if (auto rst = state.Call<int, float, std::string>("ScriptMultiPassAndRet", 999, "string", 88.88)) {
+		auto[i, s, f] = rst.value();
+		std::cout << i << std::ends << s << std::ends << f << std::endl;
+	}
+
 	return 0;
 }

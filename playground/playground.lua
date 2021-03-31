@@ -10,9 +10,13 @@ test = {
 	end,
 }
 
+function ScriptMultiPassAndRet( a, b, c)
+	return a, c, b
+end
+
 print("È«¾Ö×¢²á²âÊÔ--------------------")
-print("add_ref(1, 1) => 3	2")
-print( add_ref(1, 1) )
+print("add_ref(2, 1) => 4	2")
+print( add_ref(2, 1) )
 print()
 
 print("print1(123) => 123")

@@ -14,7 +14,7 @@ namespace LuaMix::Impl {
 			StackGuard _guard(L);
 			lua_pushcfunction(L, LuaException::StackTraceback);
 			lua_rawgeti(L, LUA_REGISTRYINDEX, fn_ref);
-			(Push(L, args), ...);
+			(..., Push(L, args));
 			if (lua_pcall(L, sizeof...(Ps), sizeof...(Rs), -int(sizeof...(Ps) + 2)) != LUA_OK) {
 				throw LuaException(L);
 			} else {
@@ -22,7 +22,7 @@ namespace LuaMix::Impl {
 				std::tuple<Rs...> rets;
 				std::apply([L](auto &... ret) {
 					int index = sizeof...(Rs);
-					((ret = Fetch<Rs>(L, -(index--))), ...);
+					(..., (ret = Fetch<Rs>(L, -(index--))));
 					}, rets);
 				return rets;
 			}
@@ -35,7 +35,7 @@ namespace LuaMix::Impl {
 			lua_pushcfunction(L, LuaException::StackTraceback); // :..., callee, trace
 			lua_getfield(L, -2, method);	// :..., callee, trace, method
 			lua_pushvalue(L, -3); // :..., callee, trace, method, callee
-			(Push(L, args), ...); // :..., callee, trace, method, callee, args...
+			(..., Push(L, args)); // :..., callee, trace, method, callee, args...
 			if (lua_pcall(L, sizeof...(Ps) + 1, sizeof...(Rs), -int(sizeof...(Ps) + 2 + 1)) != LUA_OK) {
 				throw LuaException(L);
 			} else {
@@ -43,7 +43,7 @@ namespace LuaMix::Impl {
 				std::tuple<Rs...> rets;
 				std::apply([L](auto &... ret) {
 					int index = sizeof...(Rs);
-					((ret = Fetch<Rs>(L, -(index--))), ...);
+					(..., (ret = Fetch<Rs>(L, -(index--))));
 					}, rets);
 				return rets;
 			}
@@ -59,7 +59,7 @@ namespace LuaMix::Impl {
 			StackGuard _guard(L);
 			lua_pushcfunction(L, LuaException::StackTraceback);
 			lua_rawgeti(L, LUA_REGISTRYINDEX, fn_ref);
-			(Push(L, args), ...);
+			(..., Push(L, args));
 			if (lua_pcall(L, sizeof...(Ps), 1, -int(sizeof...(Ps) + 2)) != LUA_OK) {
 				throw LuaException(L);
 			} else {
@@ -74,7 +74,7 @@ namespace LuaMix::Impl {
 			lua_pushcfunction(L, LuaException::StackTraceback); // :..., callee, trace
 			lua_getfield(L, -2, method);	// :..., callee, trace, method
 			lua_pushvalue(L, -3); // :..., callee, trace, method, callee
-			(Push(L, args), ...); // :..., callee, trace, method, callee, args...
+			(..., Push(L, args)); // :..., callee, trace, method, callee, args...
 			if (lua_pcall(L, sizeof...(Ps) + 1, 1, -int(sizeof...(Ps) + 2 + 1)) != LUA_OK) {
 				throw LuaException(L);
 			} else {

@@ -225,7 +225,7 @@ namespace LuaMix::Impl {
 
 		template <typename... Ts>
 		static LuaRef MakeCClosure(lua_State *L, lua_CFunction fn, Ts&&... ups) {
-			(Impl::Push(L, ups), ...);
+			(..., Impl::Push(L, ups));
 			lua_pushcclosure(L, fn, sizeof...(ups));
 			return RefStack(L);
 		}

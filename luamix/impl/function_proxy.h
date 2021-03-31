@@ -51,7 +51,7 @@ namespace LuaMix::Impl {
 				SwapList swap_list;
 				return std::apply([L](auto &... args) {
 					int index = 0;
-					(args.Input(L, ++index), ...);
+					(..., args.Input(L, ++index));
 					FuncType func = static_cast<FuncType>(lua_touserdata(L, lua_upvalueindex(1)));;
 					if constexpr (std::is_same_v<R, void>) {
 						std::invoke(*func, args.Value()...);
@@ -148,7 +148,7 @@ namespace LuaMix::Impl {
 				}
 				return std::apply([L](auto& obj, auto &... args) {
 					int index = 1;
-					(args.Input(L, ++index), ...);
+					(..., args.Input(L, ++index));
 					auto& mem_fn = *static_cast<const F*>(lua_touserdata(L, lua_upvalueindex(1)));
 					if constexpr (std::is_same_v<R, void>) {
 						std::invoke(mem_fn, obj.Value(), args.Value()...);
