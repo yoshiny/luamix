@@ -378,7 +378,7 @@ namespace LuaMix::Impl {
 				static_assert( std::tuple_size_v< typename FGProxy::SwapList > >= 1, "class `C` 's property getter need 1 param at least.");
 
 				using FirstArgType = typename std::tuple_element_t<0, typename FGProxy::SwapList>::ArgHoldType;
-				static_assert( std::is_convertible_v<FirstArgType, const C*>, "class `C` 's property getter's first param should be `const C*` convertible." );
+				static_assert( std::is_convertible_v<const C*, FirstArgType>, "class `C` 's property getter's first param should be `const C*` convertible to." );
 
 				auto gets = class_mt_.RawGet(MetaKeyGet);
 				gets.RawSet(name, LuaRef::MakeFunction(state_, FGProxy::Proxy, FGProxy::Function(get)));
@@ -390,7 +390,7 @@ namespace LuaMix::Impl {
 				static_assert(std::tuple_size_v< typename FSProxy::SwapList > >= 2, "class `C` 's property getter need 2 param at least.");
 
 				using FirstArgType = typename std::tuple_element_t<0, typename FSProxy::SwapList>::ArgHoldType;
-				static_assert(std::is_convertible_v<FirstArgType, C*>, "class `C` 's property setter's first param should be `C*` convertible.");
+				static_assert(std::is_convertible_v<C*, FirstArgType>, "class `C` 's property setter's first param should be `C*` convertible to.");
 
 				sets.RawSet(name, LuaRef::MakeFunction(state_, FSProxy::Proxy, FSProxy::Function(set)));
 			} else {
