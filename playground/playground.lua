@@ -80,6 +80,19 @@ print("sw:ClearWndTitle(); print(sw.Title) => empty")
 sw:ClearWndTitle(); print(sw.Title)
 print()
 
+print("sw.Title2 = 'ttt'; print(sw.Title2) => ttt")
+sw.Title2 = 'ttt'; print(sw.Title2)
+print()
+
+print("print(sw.ReadOnlyTitle) => ttt")
+print(sw.ReadOnlyTitle)
+print()
+
+print("sw.ReadOnlyTitle = 'tt' => property `ReadOnlyTitle` is read-only" )
+err_call = function()  sw.ReadOnlyTitle = 'tt' end
+print(pcall(err_call))
+print()
+
 print("脚本变量自动gc")
 local pure_script_wnd = Window.TraceCreate()
 pure_script_wnd = nil

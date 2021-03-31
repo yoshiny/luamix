@@ -370,7 +370,35 @@ namespace LuaMix::Impl {
 			return *this;
 		}
 
-		// 注册外部函数形式的属性，待添加
+		// 注册外部函数形式的属性
+		template <typename FG, typename FS>
+		ClassMeta<C>& Property(const char *name, const FG& get, const FS& set) {
+			if constexpr (!std::is_same_v<FG, std::nullptr_t>) {
+				using FGProxy = CppFuncProxy<FG>;
+				static_assert( std::tuple_size_v< typename FGProxy::SwapList > >= 1, "class `C` 's property getter need 1 param at least.");
+
+				using FirstArgType = typename std::tuple_element_t<0, typename FGProxy::SwapList>::ArgHoldType;
+				static_assert( std::is_convertible_v<FirstArgType, const C*>, "class `C` 's property getter's first param should be `const C*` convertible." );
+
+				auto gets = class_mt_.RawGet(MetaKeyGet);
+				gets.RawSet(name, LuaRef::MakeFunction(state_, FGProxy::Proxy, FGProxy::Function(get)));
+			}
+
+			auto sets = class_mt_.RawGet(MetaKeySet);
+			if constexpr (!std::is_same_v<FS, std::nullptr_t>) {
+				using FSProxy = CppFuncProxy<FS>;
+				static_assert(std::tuple_size_v< typename FSProxy::SwapList > >= 2, "class `C` 's property getter need 2 param at least.");
+
+				using FirstArgType = typename std::tuple_element_t<0, typename FSProxy::SwapList>::ArgHoldType;
+				static_assert(std::is_convertible_v<FirstArgType, C*>, "class `C` 's property setter's first param should be `C*` convertible.");
+
+				sets.RawSet(name, LuaRef::MakeFunction(state_, FSProxy::Proxy, FSProxy::Function(set)));
+			} else {
+				sets.RawSet(name, LuaRef::MakeCClosure(state_, &ModuleMetaEvent::ReadOnly, name));
+			}
+
+			return *this;
+		}
 
 		// 注册函数；主要用于静态成员函数，亦可用于类外部扩充成员函数
 		template <typename F>

@@ -108,10 +108,12 @@ int main() {
 		.Method("SetTitle2", static_cast<void(Window::*)(const char*)>(&Window::SetTitle))
 		.DefaultFactory()
 		.Factory("CreateWnd", &Window::CreateWnd, nullptr)
-		.Factory("TraceCreate", [] { Window * w = new Window; std::cout << w << " created from script.\n"; return w; }, [](Window *p) {std::cout << p << " auto gced.\n"; delete p; })
+		.Factory("TraceCreate", [] { Window * w = new Window; std::cout << w << " created from script.\n"; return w; }, []( Window *p) {std::cout << p << " auto gced.\n"; delete p; })
 		.Function("ClearWndTitle", &Window::ClearWndTitle)
 		.Property("Size", &Window::size_)
 		.Property("Title", &Window::title_)
+		.Property("Title2", [](const Window * w) { return w->GetTitle(); }, [](Window * w, const char *t) { w->SetTitle(t); })
+		.Property("ReadOnlyTitle", [](const Window * w) { return w->GetTitle(); }, nullptr)
 		;
 
 	LUAMIX_VECTOR_SUPPORT(state, Window*);
