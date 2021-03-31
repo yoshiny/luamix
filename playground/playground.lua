@@ -14,6 +14,13 @@ function ScriptMultiPassAndRet( a, b, c)
 	return a, c, b
 end
 
+print("Ä£¿é×¢²á²âÊÔ--------------------")
+print("print(cpp.test.kEnum1) => 1")
+print(cpp.test.kEnum1)
+print("print(cpp.test.IntValue) => 999")
+print(cpp.test.IntValue)
+print()
+
 print("È«¾Ö×¢²á²âÊÔ--------------------")
 print("add_ref(2, 1) => 4	2")
 print( add_ref(2, 1) )

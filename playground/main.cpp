@@ -86,7 +86,7 @@ enum MyEnum {
 int main() {
 	LuaMix::LuaState state;
 	//////////////////////////////////////////////////////////////////////////
-	// 全局函数注册
+	// 全局注册
 	LUAMIX_GLOBAL_EXPORT(state)
 		.Function("add_ref", add_ref)
 		.Function("print1", print_any<int>)
@@ -95,6 +95,15 @@ int main() {
 		.Property("IntValue", []() { return g_IntValue; }, [](int v) { g_IntValue = v; })
 		.Property("ReadOnlyIntValue", []() { return g_IntValue; }, nullptr)
 		.ScriptVal("kEnum0", kEnum0)
+		.ScriptVal("kEnum1", kEnum1)
+		;
+
+	// 模块注册
+	LUAMIX_MODULE_EXPORT(state, "cpp.test")
+		.Property("IntValue", []() { return g_IntValue; }, [](int v) { g_IntValue = v; })
+		;
+		
+	LUAMIX_MODULE_EXPORT(state, LuaMix::LuaRef::RefTable(state, "cpp.test"))
 		.ScriptVal("kEnum1", kEnum1)
 		;
 

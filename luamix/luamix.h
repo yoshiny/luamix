@@ -26,6 +26,10 @@ namespace LuaMix {
 		return Impl::ModuleMeta(md);
 	}
 
+	Impl::ModuleMeta ModuleDef(lua_State* L, LuaRef md) {
+		return Impl::ModuleMeta(md);
+	}
+
 	Impl::ModuleMeta ModuleDef(lua_State* L) {
 		return Impl::ModuleMeta(LuaRef::RefGlobal(L));
 	}

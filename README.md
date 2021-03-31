@@ -33,7 +33,11 @@ LUAMIX_GLOBAL_EXPORT(L)
     ;
 
 // 导出到指定表中
-LUAMIX_MODULE_EXPORT(L, LuaMix::RefTable(L, "modulename"))
+LUAMIX_MODULE_EXPORT(L, "cpp.test")	// 导出到表 _G.cpp.test 中
+    .Function ... // 这里就和导出到全局空间一样了
+
+auto mod = LuaMix::LuaRef::RefTable(L, "cpp.test");
+LUAMIX_MODULE_EXPORT(L, mod) // 同样导出到表 _G.cpp.test 中，此处可传入一个lua中的表
     .Function ... // 这里就和导出到全局空间一样了
 
 
