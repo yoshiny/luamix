@@ -230,6 +230,12 @@ namespace LuaMix::Impl {
 			return RefStack(L);
 		}
 
+		static LuaRef MakeCClosure(lua_State *L, lua_CFunction fn, void *p) {
+			lua_pushlightuserdata(L, p);
+			lua_pushcclosure(L, fn, 1);
+			return RefStack(L);
+		}
+
 	public:
 		LuaRef GetMetatable() const {
 			LuaRef meta;

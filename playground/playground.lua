@@ -14,6 +14,11 @@ function ScriptMultiPassAndRet( a, b, c)
 	return a, c, b
 end
 
+print(Window.WindowCounter)
+Window.WindowCounter = 888
+print(Window.WindowCounter)
+print(Window.GetWindowCounter())
+
 print("Ä£¿é×¢²á²âÊÔ--------------------")
 print("print(cpp.test.kEnum1) => 1")
 print(cpp.test.kEnum1)
@@ -22,6 +27,13 @@ print(cpp.test.IntValue)
 print()
 
 print("È«¾Ö×¢²á²âÊÔ--------------------")
+
+print(IntValue)
+IntValue = 321
+print(g_IntValue)
+print(g_ConstIntValue)
+print()
+
 print("add_ref(2, 1) => 4	2")
 print( add_ref(2, 1) )
 print()

@@ -133,6 +133,34 @@ namespace LuaMix::Impl {
 	};
 
 	//////////////////////////////////////////////////////////////////////////
+	// 属性代理
+	template <typename P>
+	struct CppPropertyGetter {
+		static int Proxy(lua_State *L) {
+			try {
+				auto &prop = *static_cast<P*>(lua_touserdata(L, lua_upvalueindex(1)));
+				Push<P>(L, prop);
+				return 1;
+			} catch (const std::exception& e) {
+				return luaL_error(L, "%s", e.what());
+			}
+		}
+	};
+
+	template <typename P>
+	struct CppPropertySetter {
+		static int Proxy(lua_State *L) {
+			try {
+				auto &prop = *static_cast<P*>(lua_touserdata(L, lua_upvalueindex(1)));
+				prop = Fetch<P, true>(L, 1);
+				return 0;
+			} catch (const std::exception& e) {
+				return luaL_error(L, "%s", e.what());
+			}
+		}
+	};
+
+	//////////////////////////////////////////////////////////////////////////
 	// 成员方法代理
 	template <bool IS_CONST, typename F, typename C, typename R, typename... P>
 	struct CppMethodProxyImpl {

@@ -123,6 +123,25 @@ namespace LuaMix::Impl {
 			return *this;
 		}
 
+		template <typename P>
+		ModuleMeta& Property(const char *name, P& prop, bool is_read_only = false) {
+			auto gets = module_.RawGet(MetaKeyGet);
+			gets.RawSet(name, LuaRef::MakeCClosure(state_, &CppPropertyGetter<P>::Proxy, (void*)&prop));
+
+			auto sets = module_.RawGet(MetaKeySet);
+			if constexpr (!std::is_const_v<P>) {
+				if (is_read_only) {
+					sets.RawSet(name, LuaRef::MakeCClosure(state_, &ModuleMetaEvent::ReadOnly, name));
+				} else {
+					sets.RawSet(name, LuaRef::MakeCClosure(state_, &CppPropertySetter<P>::Proxy, (void*)&prop));
+				}
+			} else {
+				sets.RawSet(name, LuaRef::MakeCClosure(state_, &ModuleMetaEvent::ReadOnly, name));
+			}
+
+			return *this;
+		}
+
 		// 注册脚本变量
 		template <typename T>
 		ModuleMeta& ScriptVal(const char *name, T val) {
@@ -188,6 +207,7 @@ namespace LuaMix::Impl {
 		}
 
 		static int newindex(lua_State* L) {
+			int self_type = lua_type(L, 1);
 			lua_getmetatable(L, 1);
 			while (lua_istable(L, -1)) // :ud, k, v, mt
 			{
@@ -197,9 +217,14 @@ namespace LuaMix::Impl {
 					lua_pushvalue(L, 2); // :ud, k, v, mt, mt[".set"], k
 					lua_rawget(L, -2); // :ud, k, v, mt, mt[".set"], kv
 					if (lua_iscfunction(L, -1)) {
-						lua_pushvalue(L, 1);
-						lua_pushvalue(L, 3);
-						lua_call(L, 2, 0);
+						if (LUA_TUSERDATA == self_type) {
+							lua_pushvalue(L, 1);
+							lua_pushvalue(L, 3);
+							lua_call(L, 2, 0);
+						} else {
+							lua_pushvalue(L, 3);
+							lua_call(L, 1, 0);
+						}
 						return 0;
 					}
 					lua_pop(L, 1); // :ud, k, v, mt, mt[".set"]
@@ -212,15 +237,19 @@ namespace LuaMix::Impl {
 			}
 			lua_settop(L, 3); // :ud, k, v
 			// 保存到peer表中
-			if (lua_getuservalue(L, 1) == LUA_TNIL) {
-				lua_pop(L, 1);
-				lua_newtable(L); // :ud, k, v, peer
-				lua_pushvalue(L, -1); // :ud, k, v, peer, peer
-				lua_setuservalue(L, 1); // :ud, k, v, peer
-			}
-			if (lua_istable(L, -1)) { // :ud, k, v, peer
-				lua_insert(L, -3); // :ud, peer, k, v
-				lua_settable(L, -3); // :ud, peer
+			if (LUA_TUSERDATA == self_type) {
+				if (lua_getuservalue(L, 1) == LUA_TNIL) {
+					lua_pop(L, 1);
+					lua_newtable(L); // :ud, k, v, peer
+					lua_pushvalue(L, -1); // :ud, k, v, peer, peer
+					lua_setuservalue(L, 1); // :ud, k, v, peer
+				}
+				if (lua_istable(L, -1)) { // :ud, k, v, peer
+					lua_insert(L, -3); // :ud, peer, k, v
+					lua_settable(L, -3); // :ud, peer
+				}
+			} else {
+				lua_rawset(L, 1);
 			}
 			lua_settop(L, 1);
 			return 0;
@@ -367,6 +396,26 @@ namespace LuaMix::Impl {
 			using MemeberVariableSetter = CppMemeberVariableSetter<decltype(wrap), C, V>;
 			auto sets = class_mt_.RawGet(MetaKeySet);
 			sets.RawSet(name, LuaRef::MakeFunction(state_, MemeberVariableSetter::Proxy, wrap));
+			return *this;
+		}
+
+		// 注册静态成员变量为属性
+		template <typename P>
+		ClassMeta<C>& StaticProperty(const char *name, P& prop, bool is_read_only = false) {
+			auto gets = class_mt_.RawGet(MetaKeyGet);
+			gets.RawSet(name, LuaRef::MakeCClosure(state_, &CppPropertyGetter<P>::Proxy, (void*)&prop));
+
+			auto sets = class_mt_.RawGet(MetaKeySet);
+			if constexpr (!std::is_const_v<P>) {
+				if (is_read_only) {
+					sets.RawSet(name, LuaRef::MakeCClosure(state_, &ModuleMetaEvent::ReadOnly, name));
+				} else {
+					sets.RawSet(name, LuaRef::MakeCClosure(state_, &CppPropertySetter<P>::Proxy, (void*)&prop));
+				}
+			} else {
+				sets.RawSet(name, LuaRef::MakeCClosure(state_, &ModuleMetaEvent::ReadOnly, name));
+			}
+
 			return *this;
 		}
 

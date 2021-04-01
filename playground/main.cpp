@@ -38,10 +38,17 @@ public:
 		wnd->title_.clear();
 	}
 
+	static int GetWindowCounter() { return counter_; }
+
+public:
+	static int counter_;
+
 public:
 	float size_;
 	std::string title_;
 };
+
+int Window::counter_ = 999;
 
 class Button : public Window {
 public:
@@ -57,6 +64,8 @@ public:
 
 int g_IntValue = 999;
 
+const int g_ConstIntVal = 888;
+
 int add_ref(int a, int&b) {
 	b++;
 	return a + b;
@@ -71,6 +80,9 @@ void print_any( Ts... args ) {
 }
 
 Window g_wnd;
+
+const Window * g_cpwnd = &g_wnd;
+Window * g_pwnd = &g_wnd;
 
 bool fetch_window(const Window *& wnd ) {
 	wnd = &g_wnd;
@@ -96,6 +108,10 @@ int main() {
 		.Property("ReadOnlyIntValue", []() { return g_IntValue; }, nullptr)
 		.ScriptVal("kEnum0", kEnum0)
 		.ScriptVal("kEnum1", kEnum1)
+		.Property("g_pwnd", g_pwnd)
+		.Property("g_cpwnd", g_cpwnd)
+		.Property("g_IntValue", g_IntValue, true)
+		.Property("g_ConstIntValue", g_ConstIntVal)
 		;
 
 	// Ä£¿é×¢²á
@@ -123,6 +139,8 @@ int main() {
 		.Property("Title", &Window::title_)
 		.Property("Title2", [](const Window * w) { return w->GetTitle(); }, [](Window * w, const char *t) { w->SetTitle(t); })
 		.Property("ReadOnlyTitle", [](const Window * w) { return w->GetTitle(); }, nullptr)
+		.StaticProperty("WindowCounter", Window::counter_)
+		.Function("GetWindowCounter", &Window::GetWindowCounter)
 		;
 
 	LUAMIX_VECTOR_SUPPORT(state, Window*);
