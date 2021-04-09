@@ -52,7 +52,7 @@ namespace LuaMix::Impl {
 				return std::apply([L](auto &... args) {
 					int index = 0;
 					(..., args.Input(L, ++index));
-					FuncType func = static_cast<FuncType>(lua_touserdata(L, lua_upvalueindex(1)));;
+					FuncType func = static_cast<FuncType>(lua_touserdata(L, lua_upvalueindex(1)));
 					if constexpr (std::is_same_v<R, void>) {
 						std::invoke(*func, args.Value()...);
 					} else {
