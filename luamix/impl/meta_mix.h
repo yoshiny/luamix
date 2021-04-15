@@ -266,16 +266,18 @@ namespace LuaMix::Impl {
 			lua_pushstring(L, LUAMIX_KEY_COLLECT);
 			lua_rawget(L, LUA_REGISTRYINDEX); // :ud, collect
 
-			if (LUA_TNIL != lua_rawgetp(L, -1, ud)) { // :ud, collect, flag
-				// 需要析构，从其元表中找出析构函数，并调用；注意这里必须是准确的类型
-				luaL_getmetatable(L, ClassTypeSignature<C>::Value()); // :ud, collect, flag, mt
-				lua_pushstring(L, MetaKeyGC); // :ud, collect, flag, mt, ".gc"
-				lua_rawget(L, -2); // :ud, collect, flag, mt, gc_fn
-				lua_pushvalue(L, 1); // :ud, collect, flag, mt, gc_fn, ud
-				lua_call(L, 1, 0); // :ud, collect, flag, mt
-				// 清理标记
-				lua_pushnil(L); // :ud, collect, flag, mt, nil
-				lua_rawsetp(L, 2, ud); // :ud, collect, flag, mt
+			if (LUA_TNUMBER == lua_rawgetp(L, -1, ud)) {
+				// 找出对应的gc函数
+				luaL_getmetatable(L, ClassTypeSignature<C>::Value()); // :ud, collect, gc_id, mt
+				lua_pushstring(L, MetaKeyGC); // :ud, collect, gc_id, mt, ".gc"
+				lua_rawget(L, -2); // :ud, collect, gc_id, mt, .gc
+				lua_rawgeti(L, -1, lua_tointeger(L, -3)); // :ud, collect, gc_id, mt, .gc, gc_fn
+				lua_pushvalue(L, 1); // :ud, collect, gc_id, mt, .gc, gc_fn, ud
+				// 这里不做判断，直接调用，如果出错，就直接引发异常
+				lua_call(L, 1, 0); // :ud, collect, gc_id, mt, .gc
+				// 最后清理标记
+				lua_pushnil(L); // :ud, collect, gc_id, mt, .gc, nil
+				lua_rawsetp(L, 2, ud); // :ud, collect, gc_id, mt, .gc
 			}
 
 			return 0;
@@ -467,34 +469,34 @@ namespace LuaMix::Impl {
 		// 注册工厂及回收函数
 		template <typename FF, typename FC>
 		ClassMeta<C>& Factory(const char* name, const FF& factory, const FC& collect) {
-			// 先注册回收函数
-			if constexpr (!std::is_same_v < FC, std::nullptr_t>) {
-				using FuncProxy = CppFuncProxy<FC>;
-				class_mt_.RawSet(MetaKeyGC, LuaRef::MakeFunction(state_, FuncProxy::Proxy, FuncProxy::Function(collect)));
+			if (!class_mt_.RawGet(MetaKeyGC)) {
+				class_mt_.RawSet(MetaKeyGC, LuaRef::MakeTable(state_));
 			}
 
-			// 如果没有注册过回收函数，则不允许注册工厂函数，直接抛异常
-			if (!class_mt_.RawGet(MetaKeyGC)) {
-				std::string err = "can't register factory to `";
-				err += ClassTypeSignature<C>::Value();
-				err += "`, which has no collector.";
-				throw std::runtime_error(err);
-			}
+			// 先注册回收函数
+			using GCProxy = CppFuncProxy<FC>;
+			auto gcs = class_mt_.RawGet(MetaKeyGC);
+			gcs.RawSet(gcs.Len() + 1, LuaRef::MakeFunction(state_, GCProxy::Proxy, GCProxy::Function(collect)));
 
 			// 注册工厂函数
 			using FactoryProxy = CppFactoryProxy<FF>;
-			class_mt_.RawSet(name, LuaRef::MakeFunction(state_, FactoryProxy::Factory, FactoryProxy::Function(factory)));
+			class_mt_.RawSet(name, LuaRef::MakeFactory(state_, FactoryProxy::Factory, FactoryProxy::Function(factory), gcs.Len()));
 
 			return *this;
 		}
 
 		// 注册默认工厂及回收函数
 		ClassMeta<C>& DefaultFactory() {
+			if (!class_mt_.RawGet(MetaKeyGC)) {
+				class_mt_.RawSet(MetaKeyGC, LuaRef::MakeTable(state_));
+			}
+
 			using GCProxy = CppFuncProxy<decltype(&defaultGC)>;
-			class_mt_.RawSet(MetaKeyGC, LuaRef::MakeFunction(state_, GCProxy::Proxy, GCProxy::Function(&defaultGC)));
+			auto gcs = class_mt_.RawGet(MetaKeyGC);
+			gcs.RawSet(gcs.Len() + 1, LuaRef::MakeFunction(state_, GCProxy::Proxy, GCProxy::Function(&defaultGC)));
 
 			using FactoryProxy = CppFactoryProxy<decltype(&defaultFactory)>;
-			class_mt_.RawSet("__call", LuaRef::MakeFunction(state_, FactoryProxy::Factory, FactoryProxy::Function(&defaultFactory)));
+			class_mt_.RawSet("__call", LuaRef::MakeFactory(state_, FactoryProxy::Factory, FactoryProxy::Function(&defaultFactory), gcs.Len()));
 
 			return *this;
 		}
@@ -515,7 +517,7 @@ namespace LuaMix::Impl {
 			return new C;
 		}
 
-		static void defaultGC(C * p) {
+		static void defaultGC(const C * p) {
 			delete p;
 		}
 

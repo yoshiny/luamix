@@ -31,7 +31,13 @@ public:
 	}
 
 	static Window *CreateWnd() {
+		std::cout << "Window *CreateWnd called.\n";
 		return new Window;
+	}
+
+	static void DestoryWnd(const Window *wnd) {
+		std::cout << "Window DestoryWnd called.\n";
+		delete wnd;
 	}
 
 	static void ClearWndTitle(Window *wnd) {
@@ -132,8 +138,8 @@ int main() {
 		.Method("SetTitle", static_cast<void(Window::*)(const std::string&)>(&Window::SetTitle))
 		.Method("SetTitle2", static_cast<void(Window::*)(const char*)>(&Window::SetTitle))
 		.DefaultFactory()
-		.Factory("CreateWnd", &Window::CreateWnd, nullptr)
-		.Factory("TraceCreate", [] { Window * w = new Window; std::cout << w << " created from script.\n"; return w; }, []( Window *p) {std::cout << p << " auto gced.\n"; delete p; })
+		.Factory("CreateWnd", &Window::CreateWnd, &Window::DestoryWnd)
+		.Factory("TraceCreate", [] { Window * w = new Window; std::cout << w << " created from script.\n"; return w; }, [](const Window *p) {std::cout << p << " auto gced.\n"; delete p; })
 		.Function("ClearWndTitle", &Window::ClearWndTitle)
 		.Property("Size", &Window::size_)
 		.Property("Title", &Window::title_)

@@ -99,6 +99,13 @@ namespace LuaMix::Impl {
 			lua_rawgeti(state_, LUA_REGISTRYINDEX, ref_);
 		}
 
+		int Len() const {
+			Push();
+			int n = static_cast<int>(luaL_len(state_, -1));
+			lua_pop(state_, 1);
+			return n;
+		}
+
 	public:
 		bool IsTable() const {
 			if (ref_ == LUA_NOREF) {
@@ -220,6 +227,18 @@ namespace LuaMix::Impl {
 				pushFunctionObj(L, obj);
 			}
 			lua_pushcclosure(L, fn, 1);
+			return RefStack(L);
+		}
+
+		template <typename T>
+		static LuaRef MakeFactory(lua_State* L, lua_CFunction fn, T&& obj, int factory_id) {
+			if constexpr (std::is_pointer_v<T> && std::is_function_v< std::remove_pointer_t<T> >) {
+				lua_pushlightuserdata(L, obj);
+			} else {
+				pushFunctionObj(L, obj);
+			}
+			lua_pushinteger(L, factory_id);
+			lua_pushcclosure(L, fn, 2);
 			return RefStack(L);
 		}
 

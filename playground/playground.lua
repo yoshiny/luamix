@@ -114,6 +114,8 @@ print()
 
 print("脚本变量自动gc")
 local pure_script_wnd = Window.TraceCreate()
+pure_script_wnd = Window.CreateWnd()
+pure_script_wnd = Window()
 pure_script_wnd = nil
 collectgarbage()
 print()

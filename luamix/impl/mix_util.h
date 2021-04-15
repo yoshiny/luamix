@@ -110,7 +110,7 @@ namespace LuaMix::Impl
 		void* ud = *((void**)lua_touserdata(L, 1));
 		lua_pushstring(L, LUAMIX_KEY_COLLECT);
 		lua_rawget(L, LUA_REGISTRYINDEX);
-		lua_pushlightuserdata(L, ud);
+		lua_pushinteger(L, 1);
 		lua_rawsetp(L, -2, ud);
 		return 0;
 	}

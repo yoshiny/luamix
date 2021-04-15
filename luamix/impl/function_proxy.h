@@ -126,7 +126,7 @@ namespace LuaMix::Impl {
 			void* udp = *((void**)lua_touserdata(L, -ret));
 			lua_pushstring(L, LUAMIX_KEY_COLLECT);
 			lua_rawget(L, LUA_REGISTRYINDEX);
-			lua_pushlightuserdata(L, udp);
+			lua_pushvalue(L, lua_upvalueindex(2)); // 标记是哪个工厂函数所创建，回收时，使用对应的回收函数
 			lua_rawsetp(L, -2, udp);
 			return ret;
 		}
