@@ -395,9 +395,13 @@ namespace LuaMix::Impl {
 			auto gets = class_mt_.RawGet(MetaKeyGet);
 			gets.RawSet(name, LuaRef::MakeFunction(state_, MemeberVariableGetter::Proxy, wrap));
 
-			using MemeberVariableSetter = CppMemeberVariableSetter<decltype(wrap), C, V>;
 			auto sets = class_mt_.RawGet(MetaKeySet);
-			sets.RawSet(name, LuaRef::MakeFunction(state_, MemeberVariableSetter::Proxy, wrap));
+			if constexpr (!std::is_const_v<V>) {
+				using MemeberVariableSetter = CppMemeberVariableSetter<decltype(wrap), C, V>;
+				sets.RawSet(name, LuaRef::MakeFunction(state_, MemeberVariableSetter::Proxy, wrap));
+			} else {
+				sets.RawSet(name, LuaRef::MakeCClosure(state_, &ModuleMetaEvent::ReadOnly, name));
+			}
 			return *this;
 		}
 

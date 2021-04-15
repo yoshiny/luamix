@@ -83,6 +83,15 @@ print("sw.Size = 654321; print(sw.Size) => 654321.0")
 sw.Size = 654321; print(sw.Size)
 print()
 
+print("print(sw.Value) => 100")
+print(sw.Value)
+print()
+
+print("sw.Value = 1 => property `Value` is read-only")
+err_call = function()  sw.Value = 1 end
+print(pcall(err_call))
+print()
+
 print("sw:SetTitle('script wnd'); print(sw:GetTitle()) => script wnd")
 sw:SetTitle('script wnd'); print(sw:GetTitle())
 print()

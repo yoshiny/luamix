@@ -10,6 +10,10 @@
 
 class Window {
 public:
+	Window()
+		: value_(100)
+	{}
+public:
 	float GetSize() const noexcept {
 		return size_;
 	}
@@ -52,6 +56,7 @@ public:
 public:
 	float size_;
 	std::string title_;
+	const int value_;
 };
 
 int Window::counter_ = 999;
@@ -147,6 +152,7 @@ int main() {
 		.Property("ReadOnlyTitle", [](const Window * w) { return w->GetTitle(); }, nullptr)
 		.StaticProperty("WindowCounter", Window::counter_)
 		.Function("GetWindowCounter", &Window::GetWindowCounter)
+		.Property("Value", &Window::value_)
 		;
 
 	LUAMIX_VECTOR_SUPPORT(state, Window*);
