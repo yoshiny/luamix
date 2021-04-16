@@ -482,7 +482,7 @@ namespace LuaMix::Impl {
 			auto gcs = class_mt_.RawGet(MetaKeyGC);
 			gcs.RawSet(gcs.Len() + 1, LuaRef::MakeFunction(state_, GCProxy::Proxy, GCProxy::Function(collect)));
 
-			// 注册工厂函数
+			// 注册工厂函数，注意需要对应的回收函数的id
 			using FactoryProxy = CppFactoryProxy<FF>;
 			class_mt_.RawSet(name, LuaRef::MakeFactory(state_, FactoryProxy::Factory, FactoryProxy::Function(factory), gcs.Len()));
 

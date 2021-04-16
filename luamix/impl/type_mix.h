@@ -29,6 +29,7 @@ namespace LuaMix::Impl {
 	template <typename T>
 	inline constexpr bool _is_class_v = std::is_class_v<std::remove_cv_t<std::remove_pointer_t<T>>>;
 
+	// 在此根据类型派发给具体的实现，如果没有对应的特化，则引发编译错误
 	template <typename T, typename DT = std::decay_t<T>>
 	struct TypeMix : std::conditional_t< _is_type_speced_v<T>, _type_mix_spec<T>,
 		std::conditional_t<_is_type_speced_v<DT>, _type_mix_spec<DT>,
@@ -179,7 +180,7 @@ namespace LuaMix::Impl {
 	};
 
 	//////////////////////////////////////////////////////////////////////////
-	// 特化 std::string
+	// 特化 std::string，按照值语义进行处理
 	template <>
 	struct _type_mix_spec<std::string> {
 		using ArgHoldType = std::string;
@@ -374,5 +375,4 @@ namespace LuaMix::Impl {
 	// 指针的引用
 	template <typename C>
 	struct _type_mix_class<C*&> : _type_mix_class<C*> {};
-
 }
