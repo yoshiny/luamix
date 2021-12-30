@@ -109,6 +109,39 @@ enum MyEnum {
 int main() {
 	LuaMix::LuaState state;
 	//////////////////////////////////////////////////////////////////////////
+	// 带环境的DoString测试
+	{
+		LuaMix::StackGuard _guard(state);
+
+		// 创建临时元表
+		auto mt = LuaMix::LuaRef::MakeTable(state);
+		mt.RawSet("__index", LuaMix::LuaRef::RefGlobal(state));
+
+		// 创建环境表
+		auto env = LuaMix::LuaRef::MakeTable(state);
+		env.RawSet("a", 99);
+		env.SetMetatable(mt);
+		// 压入栈追溯
+		lua_pushcfunction(state, LuaMix::LuaException::StackTraceback);
+		// 加载字符串
+		std::string script = "print(a, b+1, _G)";
+		luaL_loadstring(state, script.c_str());
+		// 设置环境
+		env.Push();
+		if (!lua_setupvalue(state, -2, 1)) {
+			lua_pop(state, 1);
+		}
+		// 调用
+		if (LUA_OK != lua_pcall(state, 0, LUA_MULTRET, -2)) {
+			LuaMix::LuaException ex(state);
+			std::cout << ex.what() << std::endl;
+		}
+	}
+
+
+
+
+	//////////////////////////////////////////////////////////////////////////
 	// 全局注册
 	LUAMIX_GLOBAL_EXPORT(state)
 		.Function("add_ref", add_ref)
