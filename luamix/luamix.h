@@ -17,7 +17,7 @@ namespace LuaMix {
 	using ScriptCall = Impl::ScriptCall<Rs...>;
 
 	// Ä£¿é¶¨Òå
-	Impl::ModuleMeta ModuleDef(lua_State *L, const char* name) {
+	inline Impl::ModuleMeta ModuleDef(lua_State *L, const char* name) {
 		auto md = LuaRef::RefTable(L, name, true);
 		if (!md) {
 			std::string errmsg = "error module path: ";
@@ -26,11 +26,11 @@ namespace LuaMix {
 		return Impl::ModuleMeta(md);
 	}
 
-	Impl::ModuleMeta ModuleDef(lua_State* L, LuaRef md) {
+	inline Impl::ModuleMeta ModuleDef(lua_State* L, LuaRef md) {
 		return Impl::ModuleMeta(md);
 	}
 
-	Impl::ModuleMeta ModuleDef(lua_State* L) {
+	inline Impl::ModuleMeta ModuleDef(lua_State* L) {
 		return Impl::ModuleMeta(LuaRef::RefGlobal(L));
 	}
 
@@ -54,7 +54,7 @@ namespace LuaMix {
 }
 
 // ±ã½Ýºê
-#define LUAMIX_MODULE_EXPORT(L, M)	LuaMix::ModuleDef(L, M)
+#define LUAMIX_MODULE_EXPORT(L, M)	LuaMix::ModuleDef(L, #M)
 #define LUAMIX_GLOBAL_EXPORT(L)	LuaMix::ModuleDef(L)
 
 #define LUAMIX_CLASS_EXPORT(L, C)	LuaMix::ClassDef<C>(L, #C, "const "#C)
